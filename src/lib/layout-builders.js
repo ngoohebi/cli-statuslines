@@ -63,50 +63,35 @@ function quotaRow(c) {
   return parts.join(`     ${L}·${R}     `);
 }
 
-// Agents row also carries MCP server count — they're both "active tooling".
 function agentsRow(c) {
   if (!c.cfg.agents) return '';
-  let agentsPart = '';
-  if (c.agents) {
-    const byName = {};
-    for (const [key, info] of Object.entries(c.agents)) {
-      const n = info.name || key;
-      if (!byName[n]) byName[n] = { running: 0, done: 0, latestFinished: 0 };
-      if (info.status === 'running') byName[n].running++;
-      else {
-        byName[n].done++;
-        if ((info.finished || 0) > byName[n].latestFinished) byName[n].latestFinished = info.finished;
-      }
-    }
-    const entries = Object.entries(byName);
-    if (entries.length) {
-      const line = entries.sort((a, b) => {
-        if (a[1].running !== b[1].running) return b[1].running - a[1].running;
-        return b[1].latestFinished - a[1].latestFinished;
-      }).slice(0, 3).map(([n, s]) => {
-        const short = n.length > 12 ? n.slice(0, 12) : n;
-        const parts = [];
-        if (s.running > 0) parts.push(`${COLORS.agentRunning}○${s.running > 1 ? `×${s.running}` : ''}${R}`);
-        if (s.done > 0) parts.push(`${COLORS.agentDone}✓${s.done > 1 ? `×${s.done}` : ''}${R}${s.latestFinished ? ` ${L}${ago(s.latestFinished)}${R}` : ''}`);
-        return `${short} ${parts.join(' ')}`;
-      }).join('  ');
-      agentsPart = `${L}agents${R}  ${line}`;
+  if (!c.agents) return '';
+  const byName = {};
+  for (const [key, info] of Object.entries(c.agents)) {
+    const n = info.name || key;
+    if (!byName[n]) byName[n] = { running: 0, done: 0, latestFinished: 0 };
+    if (info.status === 'running') byName[n].running++;
+    else {
+      byName[n].done++;
+      if ((info.finished || 0) > byName[n].latestFinished) byName[n].latestFinished = info.finished;
     }
   }
-
-  let mcpPart = '';
-  if (c.adapter.features.mcp && c.mcpTotal > 0) {
-    const m = c.mcpHealthy === c.mcpTotal
-      ? `${COLORS.positive}${c.mcpTotal}${R} active`
-      : `${COLORS.positive}${c.mcpHealthy}${R}/${c.mcpTotal} active`;
-    mcpPart = `${L}mcp${R} ${m}`;
-  }
-
-  if (agentsPart && mcpPart) return `${agentsPart}  ${L}·${R}  ${mcpPart}`;
-  return agentsPart || mcpPart;
+  const entries = Object.entries(byName);
+  if (!entries.length) return '';
+  const line = entries.sort((a, b) => {
+    if (a[1].running !== b[1].running) return b[1].running - a[1].running;
+    return b[1].latestFinished - a[1].latestFinished;
+  }).slice(0, 3).map(([n, s]) => {
+    const short = n.length > 12 ? n.slice(0, 12) : n;
+    const parts = [];
+    if (s.running > 0) parts.push(`${COLORS.agentRunning}○${s.running > 1 ? `×${s.running}` : ''}${R}`);
+    if (s.done > 0) parts.push(`${COLORS.agentDone}✓${s.done > 1 ? `×${s.done}` : ''}${R}${s.latestFinished ? ` ${L}${ago(s.latestFinished)}${R}` : ''}`);
+    return `${short} ${parts.join(' ')}`;
+  }).join('  ');
+  return `${L}agents${R}  ${line}`;
 }
 
-// Memory row — MCP moved to the agents row, so this is memory-only now.
+// Memory row (memoryMcpRow name kept for cfg-key compatibility — MCP is no longer rendered).
 function memoryMcpRow(c) {
   if (!c.cfg.memory_mcp) return '';
   if (!c.adapter.features.memory) return '';

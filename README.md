@@ -6,21 +6,57 @@ A statusline dashboard for AI coding CLIs. One unified visual design, three supp
 - **Antigravity** (Google)
 - **Codex** (OpenAI)
 
+### Examples
+
+Same renderer, same theme — rows self-skip when an adapter doesn't expose that data.
+
+**Claude Code** — full feature set: quota bars, agents, memory, edited files, message history.
+
 ```
-╭───────────────────────────────────────────────────────────────────╮
-│ session  refactor statusline + per-CLI adapters                    │
-├───────────────────────────────────────────────────────────────────┤
-│ Claude Code 2.1.146  Opus 4.6  effort high  ·  3min                │   ┐ identity
-├───────────────────────────────────────────────────────────────────┤
-│ context ███░░░░░░░ 35% · compact 0 · tokens 22M · cost $X · $Y     │   ┐
-│ 5h-quota ██░░░░░░░░ 20% resets 1h     7d-quota █░░░░░░ 5% resets 1d │   ┘ usage
-├───────────────────────────────────────────────────────────────────┤
-│ agents critic ✓×3 5m ago  ·  mcp 4/16 active                       │   ┐
-│ memory global · project                                            │   ┘ tools
-├───────────────────────────────────────────────────────────────────┤
-│ edited atoms.js → renderer.js → theme.js                           │   ┐
-│ ngoohebi/cli-status-lines HEAD (25 changed)  ·  +42 -8 lines       │   ┘ footer
-╰───────────────────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬──────────────────────────────────────────╮
+│ session refactor statusline + per-CLI adapters                                                                    │                                          │
+├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤                                          │
+│ Claude Code 2.1.147  Opus 4.7  effort high  · 23min                                                              │                                          │
+├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤                                          │
+│ context ██████░░░░ 62%  ·  compact 2 times  ·  tokens 10.6M · 6.3M (session)  ·  cost $3.16 · $2.84 (session)    │                                          │
+│ 5h-quota █████░░░░░ 54% resets 1h12m     ·     7d-quota ███░░░░░░░ 31% resets 3d4h                                │                                          │
+├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤                                          │
+│ agents  Explore ○  critic ✓×3 4m ago  feature-dev ✓ 8m ago                                                       │ ▶ table line brighter                    │
+│ memory global · project · 2 rules                                                                                │ ◀ border bumped from 236 to 244          │
+├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤ ▶ remove mcp info                        │
+│ edited  src/lib/theme.js → src/lib/layout-builders.js → src/lib/renderer.js                                      │ ◀ stripped the row, kept infra intact    │
+│ ngoohebi/cli-statuslines main (3 changed)  ·  +432 -87 lines                                                     │                                          │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴──────────────────────────────────────────╯
+```
+
+**Antigravity** — quota and memory rows self-skip (`features.rateLimits = false`, `features.memory = false`).
+
+```
+╭──────────────────────────────────────────────────────────────────────────────────────────────╮
+│ session debug normalize() schema for real Antigravity payloads                               │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Antigravity 0.4.2  Gemini 2.5 Pro  · 14min                                                   │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ context ██░░░░░░░░ 18%  ·  tokens 4.2M · 1.8M (session)  ·  cost $0.42 · $0.42 (session)    │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ edited  src/adapters/antigravity.js → src/adapters/_layout.js                                │
+│ ngoohebi/cli-statuslines feat/ag-payload (5 changed)  ·  +80 -12 lines                       │
+╰──────────────────────────────────────────────────────────────────────────────────────────────╯
+```
+
+**Codex** — same shape as Antigravity; context bar shifts to the mid hue once usage crosses 50%.
+
+```
+╭───────────────────────────────────────────────────────────────────────────────────────────╮
+│ session wire Codex rate-limit normalization                                               │
+├───────────────────────────────────────────────────────────────────────────────────────────┤
+│ Codex 0.18.0  GPT-5 Codex  · 8min                                                        │
+├───────────────────────────────────────────────────────────────────────────────────────────┤
+│ context █████░░░░░ 52%  ·  tokens 8.1M · 3.4M (session)  ·  cost $0.88 · $0.88 (session) │
+├───────────────────────────────────────────────────────────────────────────────────────────┤
+│ edited  src/adapters/codex.js                                                             │
+│ ngoohebi/cli-statuslines main  ·  +120 -24 lines                                          │
+╰───────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
 ## Visual design
@@ -31,7 +67,7 @@ Rows are grouped into four sections separated by box-dividers; rows within a sec
 
 1. **Identity** — CLI name + version + model + effort + duration
 2. **Usage** — context / compact / tokens / cost + rate-limit quotas
-3. **Tools** — agents + MCP + memory loading
+3. **Tools** — agents + memory loading
 4. **Footer** — recently edited files + git repo line
 
 Rows whose data is absent self-skip; entire sections collapse cleanly when nothing inside them has data.
@@ -45,11 +81,11 @@ All accents sit in the deep 24-130 range of the 256-color palette. Chrome uses t
 | `24` deep teal-blue | workspace glyph |
 | `60` deep slate | directory, vendor tag, user message arrow |
 | `91` deep purple | model name |
-| `65` dark sage | repo name, positive values (cost, healthy mcp, memory ✓, added) |
+| `65` dark sage | repo name, positive values (cost, memory ✓, added) |
 | `95` dark mauve | git branch, removed lines |
 | `130` dark gold | warning band (50-79% bars), running agents, high-effort tag |
 | `88` deep red | error band (≥80% bars), max-effort tag |
-| `236` very dark grey | box borders, divider lines |
+| `244` medium grey | box borders, divider lines |
 | `240` dark grey | label words (`tokens`, `ctx`, ...) |
 | `234` nearly black | bar empty cells |
 
@@ -77,8 +113,7 @@ Box width is driven by content. Configure a fixed width per-target with `cli-sta
 - Context window % + compact count
 - Rate-limit usage with countdown (5h / 7d for Claude Code; per-tool labels)
 - Git repo + branch + dirty count + +N/-M line deltas
-- Subagent activity (running / completed / latest finish) — MCP count appended
-- MCP server health (cached background refresh)
+- Subagent activity (running / completed / latest finish)
 - Memory load detection (CLAUDE.md, .claude/rules — Claude Code only)
 - Recently edited files
 - Live message history in the right column
@@ -109,7 +144,7 @@ ANTIGRAVITY_HOME=~/.config/antigravity node bin/cli-statuslines.js install antig
 CODEX_HOME=~/.config/codex             node bin/cli-statuslines.js install codex
 ```
 
-Individual overrides: `AG_SETTINGS_PATH` / `AG_STATE_DIR` / `AG_CONFIG_PATH` / `AG_MCP_CACHE_PATH` / `AG_RL_SNAPSHOT_PATH` (and the `CODEX_*` equivalents).
+Individual overrides: `AG_SETTINGS_PATH` / `AG_STATE_DIR` / `AG_CONFIG_PATH` / `AG_RL_SNAPSHOT_PATH` (and the `CODEX_*` equivalents).
 
 Restart the affected tool after install.
 
@@ -186,7 +221,7 @@ src/
     active-time.js            UserPromptSubmit + Stop
     subagent.js               SubagentStart + SubagentStop
     summary.js                UserPromptSubmit (every N messages)
-    mcp-refresh.js            Background MCP server list refresh
+    mcp-refresh.js            Background MCP server list refresh (infra only, not displayed)
 ```
 
 Zero npm dependencies. Pure Node ≥18. No build step.
@@ -198,8 +233,8 @@ Each adapter (`src/adapters/<name>.js`) exposes:
 ```js
 {
   name, displayName, vendor,
-  stateDir, settingsPath, configPath, mcpCachePath, rateLimitSnapshotPath,
-  features,                            // {cost, rateLimits, memory, mcp, ...} bools
+  stateDir, settingsPath, configPath, rateLimitSnapshotPath,
+  features,                            // {cost, rateLimits, memory, ...} bools
   deriveSessionId(payload) → string,
   detectVersion() → string | null,     // best-effort CLI version detection
   normalize(payload) → canonical,
@@ -268,5 +303,5 @@ Per-session state under `<adapter.stateDir>`, keyed by a 24-char session ID deri
 - `compacts-<sid>.json` — context compact count
 - `summary-<sid>.txt` — session summary
 - `audit.log` — append-only cost movements
-- `mcp-status-cache.json` — MCP server status cache (90s TTL)
+- `mcp-status-cache.json` — MCP server status cache (infra only, not displayed)
 - `rate-limit-snapshots.json` — cross-session quota aggregation

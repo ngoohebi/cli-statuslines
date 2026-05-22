@@ -9,7 +9,7 @@ const RESET = '\x1b[0m';
 // in the palette glows or pops — everything recedes into the dark.
 const COLORS = {
   // Chrome
-  border:   '\x1b[38;5;236m',  // very dark grey
+  border:   '\x1b[38;5;244m',  // medium grey — brighter than label (240) so chrome reads clearly
   label:    '\x1b[38;5;240m',  // dark grey labels
 
   // Identity
