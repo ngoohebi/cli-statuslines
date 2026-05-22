@@ -1,0 +1,17 @@
+{
+  "name": "cli-statuslines",
+  "version": "1.0.0",
+  "description": "Comprehensive statusline dashboard for Claude Code, Antigravity CLI, and Codex CLI",
+  "bin": {
+    "cli-statuslines": "./bin/cli-statuslines.js"
+  },
+  "main": "./src/statusline.js",
+  "scripts": {
+    "test": "node test/run.js"
+  },
+  "keywords": ["claude-code", "antigravity", "codex", "statusline", "dashboard", "cli"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
